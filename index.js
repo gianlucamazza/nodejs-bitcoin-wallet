@@ -1,10 +1,24 @@
+const fs = require('fs');
+let config;
+let configPath = './config';
+if (fs.existsSync()) {
+	const config = require(configPath);
+} else {
+	fs.copyFile('./config.json.template', './config.json', (err) => {
+  if (err) throw err;
+  	config = require(configPath);
+	});
+}
+
+
 const explorer = require('./explorer/explorer');
 const wallet = require('./wallet/wallet.js');
-const config = require('./config');
 const utils = require('./utils');
+const inquirer = require("inquirer");
 const menu = require('./menu');
 
-const inquirer = require("inquirer");
+
+
 
 function getBalance(addressList) {
 	let confirmed = 0;
