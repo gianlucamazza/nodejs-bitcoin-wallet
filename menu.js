@@ -8,7 +8,7 @@ const choices = [
 questions.push({
      type: 'list',
      name: 'template',
-     message: 'What to you want to do?',
+     message: 'What do you want to do?',
      choices: choices,
      default: choices[1],
    });
