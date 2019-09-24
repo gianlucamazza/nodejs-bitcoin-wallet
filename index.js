@@ -41,7 +41,11 @@ async function showTxsHistory () {
 			let txs = await explorer.getAddressTxs(address);
 			for (let k in txs) {
 				utils.printText("txid: " + txs[k].txid, "green")
-				utils.printText("confirmed: " + txs[k].status.confirmed, "green")
+				if(txs[k].status.confirmed) {
+					utils.printText("confirmed: " + txs[k].status.confirmed, "green");
+				} else {
+					utils.printText("confirmed: " + txs[k].status.confirmed, "yellow");
+				}
 				for (let n in txs[k].vin) {
 					if(txs[k].vin[n].scriptpubkey_address === address) {
 						let amount = utils.satoshiToBtc(txs[k].vin[n].value);
