@@ -1,0 +1,4 @@
+{
+	"mainnet" : { "endpoint":"https://blockstream.info/api/" },
+	"testnet" : { "endpoint":"https://blockstream.info/testnet/api/" }
+}

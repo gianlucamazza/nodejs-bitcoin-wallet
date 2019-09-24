@@ -1,0 +1,6 @@
+{
+  "network": "testnet",
+  "mnemonic": "",
+  "derivationPath": "m/49'/0",
+  "version": "1.0.0"
+}
