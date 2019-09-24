@@ -1,5 +1,8 @@
 # nodejs bitcoin wallet
 
+![Alt text](resources/screenshot.png)
+
+
 1. download
 
 ```
