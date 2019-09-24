@@ -1,8 +1,9 @@
 const utils = require('./../utils');
 const questions = [];
+let tx = {};
 
 const choices = [
-  'refresh transactions',
+  'edit address',
   'go back'
 ];
 
@@ -10,16 +11,15 @@ questions.push({
   type: 'input',
   name: 'template',
   message: 'insert destionation address:',
-  choices: choices,
 });
 
 function callback (template) {
-  switch (template) {
-    case choices[0]:
-      break;
-    case choices[1]:
-      break;
-    }
+  if(utils.validateAddress(template)) {
+    return template;
+  } else {
+    utils.printText('address not valid', 'red');
+    utils.sendTransaction();
+  }
 }
 
 module.exports = {

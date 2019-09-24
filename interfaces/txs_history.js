@@ -22,7 +22,7 @@ function callback (template) {
       break;
     case choices[1]:
       utils.clear();
-      utils.runWallet();
+      utils.refresh();
       break;
     }
 }

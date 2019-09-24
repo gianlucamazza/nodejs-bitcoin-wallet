@@ -9,6 +9,10 @@ const config = require('./config');
 const menu_main = require('./interfaces/main');
 const menu_txs_history = require('./interfaces/txs_history');
 const menu_send_0 = require('./interfaces/send_tx_0');
+const validate = require('bitcoin-address-validation');
+const bitcoin = require('bitcoinjs-lib');
+
+
 
 exports.printQR = function (address) {
   return qrcode.generate(address, {small: true})
@@ -110,9 +114,25 @@ exports.getCurrentAddress = function (addressList) {
 
 exports.sendTransaction = async function () {
   this.clear();
+
   let addressList = await wallet.generateAddresses();
   let balance = this.getBalance(addressList);
+
+  // wallet info
+  this.printText("\n--- prepare transaction ---\n");
+	this.printText("confirmed balance: " + this.satoshiToBtc(balance.confirmed),"green");
+	this.printText("unconfirmed balance: " + this.satoshiToBtc(balance.unconfirmed),"yellow");
+  this.printText("\n");
+
   this.showMenu(menu_send_0)
+}
+
+exports.validateAddress = function (address) {
+	if (validate(address)[config.network]) {
+		return true
+	} else {
+		return false
+	}
 }
 
 exports.refresh = async function () {
