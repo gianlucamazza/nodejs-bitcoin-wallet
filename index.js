@@ -1,8 +1,8 @@
 const fs = require('fs');
 let config;
-let configPath = './config';
-if (fs.existsSync()) {
-	const config = require(configPath);
+let configPath = './config.json';
+if (fs.existsSync(configPath)) {
+	config = require(configPath);
 } else {
 	fs.copyFile('./config.json.template', './config.json', (err) => {
   if (err) throw err;
