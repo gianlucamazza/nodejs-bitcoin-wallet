@@ -8,6 +8,7 @@ const wallet = require('./wallet/wallet.js');
 const config = require('./config');
 const menu_main = require('./interfaces/main');
 const menu_txs_history = require('./interfaces/txs_history');
+const menu_send_0 = require('./interfaces/send_tx_0');
 
 exports.printQR = function (address) {
   return qrcode.generate(address, {small: true})
@@ -40,9 +41,9 @@ exports.satoshiToBtc = function (amount) {
   return (amount / 100000000).toFixed(8);
 }
 
-exports.showMenu = async function (questions, choices, callback) {
-	const answer = await inquirer.prompt(questions);
-	callback(answer);
+exports.showMenu = async function (interface) {
+	const answer = await inquirer.prompt(interface.questions);
+	interface.callback(answer.template);
 }
 
 exports.getBalance = function (addressList) {
@@ -96,9 +97,7 @@ exports.showTxsHistory = async function () {
 		}
 
 	}
-	this.showMenu(menu_txs_history.questions,
-                menu_txs_history.choices,
-                menu_txs_history.callback);
+	this.showMenu(menu_txs_history);
 }
 
 exports.getCurrentAddress = function (addressList) {
@@ -109,10 +108,17 @@ exports.getCurrentAddress = function (addressList) {
 	}
 }
 
-exports.runWallet = async function () {
+exports.sendTransaction = async function () {
+  this.clear();
+  let addressList = await wallet.generateAddresses();
+  let balance = this.getBalance(addressList);
+  this.showMenu(menu_send_0)
+}
+
+exports.refresh = async function () {
   let blockhash = await explorer.getLastBlockHash();
 	let blocksheight = await explorer.getLastBlockHeight();
-	addressList = await wallet.generateAddresses();
+	let addressList = await wallet.generateAddresses();
 	let depositAddress = this.getCurrentAddress(addressList);
 	let balance = this.getBalance(addressList);
 
@@ -129,7 +135,5 @@ exports.runWallet = async function () {
 	this.printText("deposit address: " + depositAddress,"green");
 	this.printQR(depositAddress)
 
-	this.showMenu(menu_main.questions,
-                menu_main.choices,
-                menu_main.callback);
+	this.showMenu(menu_main);
 }

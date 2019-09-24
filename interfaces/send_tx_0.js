@@ -7,22 +7,17 @@ const choices = [
 ];
 
 questions.push({
-  type: 'list',
+  type: 'input',
   name: 'template',
-  message: 'What do you want to do?',
+  message: 'insert destionation address:',
   choices: choices,
-  default: choices[1],
 });
 
 function callback (template) {
   switch (template) {
     case choices[0]:
-      utils.clear();
-      utils.showTxsHistory();
       break;
     case choices[1]:
-      utils.clear();
-      utils.runWallet();
       break;
     }
 }

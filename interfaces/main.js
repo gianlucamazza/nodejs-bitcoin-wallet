@@ -16,14 +16,15 @@ questions.push({
      default: choices[1],
 });
 
-function callback (answer) {
-  switch (answer.template) {
+function callback (template) {
+  switch (template) {
     case choices[0]:
-      // FIXME
+      utils.clear();
+      utils.sendTransaction();
       break;
     case choices[1]:
       utils.clear();
-      utils.runWallet();
+      utils.refresh();
       break;
     case choices[2]:
       utils.clear();
