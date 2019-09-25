@@ -20,7 +20,7 @@ questions.push({
 
 function callback (result) {
   // FIXME
-  if(utils.validateAddress(result.address) && result.amount > 0 {
+  if(utils.validateAddress(result.address) && result.amount > 0) {
     return template;
   } else {
     utils.printText('address not valid', 'red');
