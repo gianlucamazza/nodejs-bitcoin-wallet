@@ -47,7 +47,7 @@ exports.satoshiToBtc = function (amount) {
 
 exports.showMenu = async function (interface) {
 	const answer = await inquirer.prompt(interface.questions);
-	interface.callback(answer.template);
+	interface.callback(answer);
 }
 
 exports.getBalance = function (addressList) {

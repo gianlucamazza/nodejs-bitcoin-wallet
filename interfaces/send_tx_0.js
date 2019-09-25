@@ -9,12 +9,18 @@ const choices = [
 
 questions.push({
   type: 'input',
-  name: 'template',
+  name: 'address',
   message: 'insert destionation address:',
+},
+{
+  type: 'input',
+  name: 'amount',
+  message: 'insert amount (BTC):',
 });
 
-function callback (template) {
-  if(utils.validateAddress(template)) {
+function callback (result) {
+  // FIXME
+  if(utils.validateAddress(result.address) && result.amount > 0) {
     return template;
   } else {
     utils.printText('address not valid', 'red');
