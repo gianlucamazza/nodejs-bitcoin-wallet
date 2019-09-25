@@ -24,3 +24,8 @@ exports.getAddressUtxo = async function(address) {
 exports.getAddressTxs = async function(address) {
 	return await http.get('address/' + address + '/txs');
 }
+
+// get network fees
+exports.getEstimatedFees = async function() {
+	return await http.get('/fee-estimates');
+}
