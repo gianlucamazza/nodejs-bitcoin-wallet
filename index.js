@@ -6,7 +6,7 @@ const menu = require('./menu');
 
 const inquirer = require("inquirer");
 
-function getBalance(addressList) {
+function getBalance() {
 	let confirmed = 0;
 	let unconfirmed = 0;
 	for (i in addressList.addresses) {
@@ -24,7 +24,7 @@ function getBalance(addressList) {
 	return {confirmed, unconfirmed};
 }
 
-function getCurrentAddress(addressList) {
+function getCurrentAddress() {
 	for (let i in addressList["addresses"]){
 		if(!addressList["addresses"][i].chain_stats && !addressList["addresses"][i].mempool_stats) {
 			return addressList["addresses"][i].address
@@ -32,16 +32,72 @@ function getCurrentAddress(addressList) {
 	}
 }
 
+async function showTxsHistory () {
+	utils.printText("\n--- transaction history ---\n")
+	let txs = []
+	for (let i in addressList["addresses"]){
+		if(addressList["addresses"][i].chain_stats || addressList["addresses"][i].mempool_stats) {
+			let address = addressList["addresses"][i].address;
+			let txs = await explorer.getAddressTxs(address);
+			for (let k in txs) {
+				utils.printText("txid: " + txs[k].txid, "green")
+				utils.printText("confirmed: " + txs[k].status.confirmed, "green")
+				for (let n in txs[k].vin) {
+					if(txs[k].vin[n].scriptpubkey_address === address) {
+						let amount = utils.satoshiToBtc(txs[k].vin[n].value);
+						utils.printText('amount: ' + amount);
+						utils.printText('type: sent\n', "green");
+					}
+				}
+				for (let n in txs[k].vout) {
+					if(txs[k].vout[n].scriptpubkey_address === address) {
+						let amount = utils.satoshiToBtc(txs[k].vout[n].value);
+						utils.printText('amount: ' + amount);
+						utils.printText('type: received\n', "green");
+					}
+				}
+			}
+		}
+
+	}
+	askMenu()
+}
+
+
+
+async function askMenu () {
+	// menu level 1
+	const answer = await inquirer.prompt(menu.questions);
+	switch (answer.template) {
+		case menu.choices[0]:
+			// FIXME
+			break;
+		case menu.choices[1]:
+			utils.clear();
+			main();
+			break;
+		case menu.choices[2]:
+			utils.clear();
+			showTxsHistory();
+			break;
+		case menu.choices[3]:
+			utils.clear();
+			return;
+			break;
+		}
+}
+
 utils.clear();
 utils.printLogo();
 utils.printVersion();
 
+let addressList;
 async function main() {
 	let blockhash = await explorer.getLastBlockHash();
 	let blocksheight = await explorer.getLastBlockHeight();
-	let addressList = await wallet.generateAddresses();
-	let depositAddress = getCurrentAddress(addressList);
-	let balance = getBalance(addressList);
+	addressList = await wallet.generateAddresses();
+	let depositAddress = getCurrentAddress();
+	let balance = getBalance();
 
 	// blockchain info
 	utils.printText("network: " + config.network, "red");
@@ -56,24 +112,7 @@ async function main() {
 	utils.printText("deposit address: " + depositAddress,"green");
 	utils.printQR(depositAddress)
 
-	// menu level 1
-	const answer = await inquirer.prompt(menu.questions);
-	switch (answer.template) {
-		case menu.choices[0]:
-			// FIXME
-			break;
-		case menu.choices[1]:
-			utils.clear();
-			main();
-			break;
-		case menu.choices[2]:
-			// FIXME
-			break;
-		case menu.choices[3]:
-			utils.clear();
-			return;
-			break;
-		}
+	askMenu();
 }
 
 main()
