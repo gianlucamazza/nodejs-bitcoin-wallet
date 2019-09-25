@@ -1,12 +1,11 @@
 const bip39 = require('bip39');
 const bip32 = require('bip32');
 const bitcoin = require('bitcoinjs-lib');
-const validate = require('bitcoin-address-validation');
 const explorer = require('./../explorer/explorer');
 const network = require('./../config.json').network;
 const fs = require('fs');
 
-getNetwork = function () {
+let getNetwork = function () {
 	if (network === 'mainnet') {
 			return bitcoin.networks.mainnet;
 	}
@@ -109,14 +108,6 @@ exports.generateAddresses = async function () {
 	await generateAddressList(chindex, true);
 
 	return { "addresses": myaddresses, "change_addresses": mychangeaddresses }
-}
-
-exports.validateAddress = function (address) {
-	if (validate(address)[getNetwork()]) {
-		return true
-	} else {
-		return false
-	}
 }
 
 exports.prepareTx = function (address, satoshi) {
