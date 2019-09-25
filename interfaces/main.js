@@ -10,14 +10,14 @@ const choices = [
 
 questions.push({
      type: 'list',
-     name: 'template',
+     name: 'menu',
      message: 'What do you want to do?',
      choices: choices,
      default: choices[1],
 });
 
-function callback (template) {
-  switch (template) {
+function callback (result) {
+  switch (result.menu) {
     case choices[0]:
       utils.clear();
       utils.sendTransaction();
