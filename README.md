@@ -19,7 +19,7 @@ npm install
 3. copy the configuration file:
 
 ```
-mv config.json.template config.json
+cp config.json.template config.json
 ```
 
 4. run the wallet, if not present a bip32 wallet will be generated:
