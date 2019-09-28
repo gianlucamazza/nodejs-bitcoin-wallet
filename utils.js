@@ -4,14 +4,13 @@ const figlet = require("figlet");
 const clear = require('clear');
 const inquirer = require("inquirer");
 const explorer = require('./explorer/explorer');
-const wallet = require('./wallet/wallet.js');
+const wallet = require('./wallet/wallet');
 const config = require('./config');
 const menu_main = require('./interfaces/main');
 const menu_txs_history = require('./interfaces/txs_history');
 const menu_send_0 = require('./interfaces/send_tx_0');
 const validate = require('bitcoin-address-validation');
 const bitcoin = require('bitcoinjs-lib');
-
 
 
 exports.printQR = function (address) {
@@ -45,36 +44,25 @@ exports.satoshiToBtc = function (amount) {
   return (amount / 100000000).toFixed(8);
 }
 
+exports.msatToSat = function (msat) {
+  return (amount / 1000);
+}
+
 exports.showMenu = async function (interface) {
 	const answer = await inquirer.prompt(interface.questions);
 	interface.callback(answer);
+  return answer;
 }
 
-exports.getBalance = function (addressList) {
-	let confirmed = 0;
-	let unconfirmed = 0;
-	for (i in addressList.addresses) {
-		let chain_stats = addressList.addresses[i].chain_stats;
-		let mempool_stats = addressList.addresses[i].mempool_stats;
 
-		if(chain_stats && mempool_stats) {
-			let confirmed_unspent = chain_stats.funded_txo_sum - chain_stats.spent_txo_sum;
-			let unconfirmed_unspent = mempool_stats.funded_txo_sum - mempool_stats.spent_txo_sum;
-			confirmed = confirmed + confirmed_unspent;
-			unconfirmed = unconfirmed + unconfirmed_unspent;
-		}
-	}
-
-	return {confirmed, unconfirmed};
-}
 
 exports.showTxsHistory = async function () {
-  let addressList = await wallet.generateAddresses();
+  let addressList = wallet.getAddresses();
 	this.printText("\n--- transaction history ---\n")
 	let txs = []
-	for (let i in addressList["addresses"]){
-		if(addressList["addresses"][i].chain_stats || addressList["addresses"][i].mempool_stats) {
-			let address = addressList["addresses"][i].address;
+	for (let i in addressList){
+		if(addressList[i].chain_stats || addressList[i].mempool_stats) {
+			let address = addressList[i].address;
 			let txs = await explorer.getAddressTxs(address);
 			for (let k in txs) {
 				this.printText("txid: " + txs[k].txid, "green")
@@ -104,19 +92,10 @@ exports.showTxsHistory = async function () {
 	this.showMenu(menu_txs_history);
 }
 
-exports.getCurrentAddress = function (addressList) {
-	for (let i in addressList["addresses"]){
-		if(!addressList["addresses"][i].chain_stats && !addressList["addresses"][i].mempool_stats) {
-			return addressList["addresses"][i].address
-		}
-	}
-}
+exports.askTransactionDetails = async function () {
 
-exports.sendTransaction = async function () {
-  this.clear();
-
-  let addressList = await wallet.generateAddresses();
-  let balance = this.getBalance(addressList);
+  let addressList = wallet.getAddresses();
+  let balance = wallet.getBalance();
 
   // wallet info
   this.printText("\n--- prepare transaction ---\n");
@@ -124,7 +103,24 @@ exports.sendTransaction = async function () {
 	this.printText("unconfirmed balance: " + this.satoshiToBtc(balance.unconfirmed),"yellow");
   this.printText("\n");
 
-  this.showMenu(menu_send_0)
+  let feeRates = await explorer.getEstimatedFees();
+  // network fees
+  this.printText("-- estimated network fees (sat/vB) --");
+  this.printText("2 blocks: " + feeRates['2'], "yellow");
+  this.printText("6 blocks: " + feeRates['6'], "yellow");
+  this.printText("1008 blocks: " + feeRates['1008'], "yellow");
+  this.printText("\n");
+
+  let data = await this.showMenu(menu_send_0);
+
+  if(data.amount >= balance.confirmed + balance.unconfirmed) {
+    this.printText("amount is too big", "red");
+    this.askTransactionDetails();
+  }
+
+  let tx = await wallet.prepareTx(addressList, data.address, data.amount, feeRates[data.priority]);
+  console.log('utils:askTransactionDetails')
+  console.log(tx.toHex());
 }
 
 exports.validateAddress = function (address) {
@@ -135,12 +131,12 @@ exports.validateAddress = function (address) {
 	}
 }
 
-exports.refresh = async function () {
+exports.refresh = async function (refreshData) {
+  if(refreshData) await wallet.refresh();
   let blockhash = await explorer.getLastBlockHash();
 	let blocksheight = await explorer.getLastBlockHeight();
-	let addressList = await wallet.generateAddresses();
-	let depositAddress = this.getCurrentAddress(addressList);
-	let balance = this.getBalance(addressList);
+	let depositAddress = await wallet.getCurrentAddress();
+	let balance = wallet.getBalance();
 
 	// blockchain info
 	this.printText("network: " + config.network, "red");
@@ -152,7 +148,7 @@ exports.refresh = async function () {
 	this.printText("unconfirmed balance: " + this.satoshiToBtc(balance.unconfirmed),"yellow");
 
 	// deposit address
-	this.printText("deposit address: " + depositAddress,"green");
+	this.printText("deposit address: " + depositAddress);
 	this.printQR(depositAddress)
 
 	this.showMenu(menu_main);

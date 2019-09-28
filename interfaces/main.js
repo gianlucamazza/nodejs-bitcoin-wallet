@@ -20,11 +20,11 @@ function callback (result) {
   switch (result.menu) {
     case choices[0]:
       utils.clear();
-      utils.sendTransaction();
+      utils.askTransactionDetails();
       break;
     case choices[1]:
       utils.clear();
-      utils.refresh();
+      utils.refresh(true);
       break;
     case choices[2]:
       utils.clear();

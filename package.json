@@ -16,6 +16,7 @@
     "bitcoinjs-lib": "^5.1.6",
     "chalk": "^2.4.2",
     "clear": "^0.1.0",
+    "coinselect": "^3.1.11",
     "commander": "^3.0.1",
     "figlet": "^1.2.4",
     "inquirer": "^7.0.0",
