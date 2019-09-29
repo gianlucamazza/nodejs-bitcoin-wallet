@@ -75,6 +75,11 @@ function getAddress (child) {
 	return bitcoin.payments.p2wpkh({ pubkey: pubkey, network }).address;
 }
 
+async function getOutputScript(address) {
+	let script = await bitcoin.address.toOutputScript(address, getNetwork());
+	return script;
+}
+
 async function isUsed (address) {
 	let balance = await explorer.getAddressBalance(address);
 	if(balance.chain_stats.tx_count > 0 || balance.mempool_stats.tx_count > 0) {
@@ -134,7 +139,8 @@ exports.getCurrentAddress = async function () {
 	}
 }
 
-exports.getCurrentChangeAddress = function () {
+exports.getCurrentChangeAddress = async function () {
+	if(mychangeaddresses.length === 0) await this.generateAddresses()
 	for (let i in mychangeaddresses){
 		if(!mychangeaddresses[i].chain_stats && !mychangeaddresses[i].mempool_stats) {
 			return mychangeaddresses[i].address
@@ -171,45 +177,51 @@ exports.getBalance = function () {
 	return {confirmed, unconfirmed};
 }
 
-exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) {
-
-	function hasUTXO(obj) {
-		if(obj.chain_stats || obj.mempool_stats) {
-			return true;
-		} else {
-			return false;
-		}
+function hasUTXO(obj) {
+	if(obj.chain_stats || obj.mempool_stats) {
+		return true;
+	} else {
+		return false;
 	}
+}
 
-	function addressBalance(input) {
-		let confirmed = input.chain_stats.funded_txo_sum - input.chain_stats.spent_txo_sum;
-		let unconfirmed = input.mempool_stats.funded_txo_sum - input.mempool_stats.spent_txo_sum;
-		let total = confirmed + unconfirmed;
-		return total;
-	}
+function addressBalance(input) {
+	let confirmed = input.chain_stats.funded_txo_sum - input.chain_stats.spent_txo_sum;
+	let unconfirmed = input.mempool_stats.funded_txo_sum - input.mempool_stats.spent_txo_sum;
+	let total = confirmed + unconfirmed;
+	return total;
+}
 
-	function getUTXO(addresses) {
-		let utxo = [];
-		for(let i = 0; i < addresses.length; i++) {
-			for(let k = 0; k < addresses[i].txs.length; k++){
-				let t = {
-					"txId": addresses[i].txs[k].txid,
-					"vout": k,
-					"value": addressBalance(addresses[i])
-				}
-				utxo.push(t)
+async function getUTXO(addresses) {
+	let utxo = [];
+	for(let i = 0; i < addresses.length; i++) {
+		for(let k = 0; k < addresses[i].txs.length; k++){
+			let t = {
+				"address": addresses[i].address,
+				"txId": addresses[i].txs[k].txid,
+				"vout": k,
+				"pubKeyScript": await getOutputScript(addresses[i].address),
+				"value": addressBalance(addresses[i])
 			}
+			utxo.push(t)
 		}
-
-		return utxo;
 	}
+
+	return utxo;
+}
+
+async function toOutputScript(address) {
+	return await bitcoin.address.toOutputScript(address, getNetwork())
+}
+
+exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) {
 
 	let addresses = myaddresses.filter(hasUTXO)
 	for(let i = 0; i < addresses.length; i++) {
 		addresses[i].txs = await explorer.getAddressTxs(addresses[i].address);
 	}
 
-	let utxo = getUTXO(addresses);
+	let utxo = await getUTXO(addresses);
 
 	let targets = [{
 		"address": destination,
@@ -220,23 +232,30 @@ exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) 
 	if (!inputs || !outputs) return
 
 	const psbt = new bitcoin.Psbt({ network: network });
-
+	console.log(inputs)
 	inputs.forEach(input => psbt.addInput(
 		{
 			"hash": input.txId,
-			"index": input.vout
+			"index": input.vout,
+			"sequence": 0xfffffffe,
+			"witnessUtxo": {
+				"script": input.pubKeyScript,
+				"value": input.value
+			}
 		}
 	))
+
+	console.log(psbt.toHex())
+
 	outputs.forEach(output => {
 		if (!output.address) {
     	output.address = this.getCurrentChangeAddress()
 		}
 		psbt.addOutput({
-			"script": Buffer.from(output.address, 'hex'),
+			"address": await toOutputScript(output.address),
 			"value": output.value
 		})
 	})
-	console.log(psbt.extractTransaction().toHex())
 
 	return psbt;
 }
