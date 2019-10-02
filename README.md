@@ -1,4 +1,5 @@
 # nodejs bitcoin wallet
+## [experimental] funds can be "lost".
 
 ![Alt text](resources/screenshot.png)
 
@@ -26,3 +27,15 @@ cp config.json.template config.json
 ```
 npm start
 ```
+
+## development roadmap
+- sweep private key
+- multisig transactions
+- hardware wallet integration
+  - trezor
+  - ledger
+  - coldcard
+- lightning integration
+
+## support the development
+Bitcoin donations: bc1q7uauxxrumjg8pg5pr543gazrjtvyrcmxjyxks2
