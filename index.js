@@ -4,4 +4,4 @@ utils.clear();
 utils.printVersion();
 utils.printLogo();
 
-utils.refresh()
+utils.refresh();

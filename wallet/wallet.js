@@ -13,15 +13,15 @@ let getNetwork = function () {
 	if (network === 'testnet') {
 			return bitcoin.networks.testnet;
 	}
-}
+};
 
 getPath = function () {
 	return config.derivationPath;
-}
+};
 
 exports.generateMnemonic = function () {
 	return bip39.generateMnemonic();
-}
+};
 
 function validateMnemonic (mnemonic) {
 	return bip39.validateMnemonic(mnemonic);
@@ -33,7 +33,7 @@ function updateConfig (mnemonic) {
 	config.mnemonic = mnemonic;
 		fs.writeFileSync(fileName, JSON.stringify(config), 'utf8', (err) => {
 			if (err) {
-				console.log(err)
+				console.log(err);
 				return false;
 			}
 			return true;
@@ -94,7 +94,7 @@ exports.refresh = async function () {
 	mychangeaddresses = [];
 
 	await this.generateAddresses();
-}
+};
 
 let myaddresses = [];
 let mychangeaddresses = [];
@@ -111,42 +111,42 @@ exports.generateAddresses = async function () {
 			index = index + 1;
 			await generateAddressList(index);
 		} else {
-			let obj = {'address': address}
+			let obj = {'address': address};
 			if(!isChange) myaddresses.push(obj);
 			else mychangeaddresses.push(obj);
 		}
-	}
+	};
 	await generateAddressList(index, false);
 	await generateAddressList(chindex, true);
 
 	return { "addresses": myaddresses, "change_addresses": mychangeaddresses }
-}
+};
 
 exports.getAddresses = function () {
 	return myaddresses;
-}
+};
 
 exports.getChangeAddresses = function () {
 	return mychangeaddresses;
-}
+};
 
 exports.getCurrentAddress = async function () {
-	if(myaddresses.length === 0) await this.generateAddresses()
+	if(myaddresses.length === 0) await this.generateAddresses();
 	for (let i in myaddresses){
 		if(!myaddresses[i].chain_stats && !myaddresses[i].mempool_stats) {
 			return myaddresses[i].address
 		}
 	}
-}
+};
 
 exports.getCurrentChangeAddress = async function () {
-	if(mychangeaddresses.length === 0) await this.generateAddresses()
+	if(mychangeaddresses.length === 0) await this.generateAddresses();
 	for (let i in mychangeaddresses){
 		if(!mychangeaddresses[i].chain_stats && !mychangeaddresses[i].mempool_stats) {
 			return mychangeaddresses[i].address
 		}
 	}
-}
+};
 
 exports.getBalance = function () {
 	let confirmed = 0;
@@ -175,21 +175,16 @@ exports.getBalance = function () {
 	}
 
 	return {confirmed, unconfirmed};
-}
+};
 
 function hasUTXO(obj) {
-	if(obj.chain_stats || obj.mempool_stats) {
-		return true;
-	} else {
-		return false;
-	}
+	return !!(obj.chain_stats || obj.mempool_stats);
 }
 
 function addressBalance(input) {
 	let confirmed = input.chain_stats.funded_txo_sum - input.chain_stats.spent_txo_sum;
 	let unconfirmed = input.mempool_stats.funded_txo_sum - input.mempool_stats.spent_txo_sum;
-	let total = confirmed + unconfirmed;
-	return total;
+	return confirmed + unconfirmed;
 }
 
 async function getUTXO(addresses) {
@@ -202,7 +197,7 @@ async function getUTXO(addresses) {
 				"vout": k,
 				"pubKeyScript": await getOutputScript(addresses[i].address),
 				"value": addressBalance(addresses[i])
-			}
+			};
 			utxo.push(t)
 		}
 	}
@@ -210,13 +205,9 @@ async function getUTXO(addresses) {
 	return utxo;
 }
 
-async function toOutputScript(address) {
-	return await bitcoin.address.toOutputScript(address, getNetwork())
-}
-
 exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) {
 
-	let addresses = myaddresses.filter(hasUTXO)
+	let addresses = myaddresses.filter(hasUTXO);
 	for(let i = 0; i < addresses.length; i++) {
 		addresses[i].txs = await explorer.getAddressTxs(addresses[i].address);
 	}
@@ -226,13 +217,12 @@ exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) 
 	let targets = [{
 		"address": destination,
 		"value": parseFloat(satoshi) * 100000000
-	}]
-	let { inputs, outputs, fee } = coinselect(utxo, targets, feeRate)
+	}];
+	let { inputs, outputs, fee } = coinselect(utxo, targets, feeRate);
 
-	if (!inputs || !outputs) return
+	if (!inputs || !outputs) return;
 
 	const psbt = new bitcoin.Psbt({ network: network });
-	console.log(inputs)
 	inputs.forEach(input => psbt.addInput(
 		{
 			"hash": input.txId,
@@ -243,29 +233,31 @@ exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) 
 				"value": input.value
 			}
 		}
-	))
+	));
 
-	console.log(psbt.toHex())
 
-	outputs.forEach(output => {
-		if (!output.address) {
-    	output.address = this.getCurrentChangeAddress()
+	for(let i = 0; i < outputs.length; i++) {
+		if (!outputs[i].address) {
+    	outputs[i].address = await this.getCurrentChangeAddress()
 		}
+		let script = await getOutputScript(outputs[i].address);
+
 		psbt.addOutput({
-			"address": await toOutputScript(output.address),
-			"value": output.value
+			"script": script,
+			"value": outputs[i].value
 		})
-	})
+	}
+
 
 	return psbt;
-}
+};
 
 exports.signTx = function (tx) {
 	// FIXME
 	return null;
-}
+};
 
 exports.broadcastTx = function (signedTx) {
 	// FIXME
 	return null;
-}
+};

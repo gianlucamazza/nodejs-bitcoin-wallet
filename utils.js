@@ -10,12 +10,11 @@ const menu_main = require('./interfaces/main');
 const menu_txs_history = require('./interfaces/txs_history');
 const menu_send_0 = require('./interfaces/send_tx_0');
 const validate = require('bitcoin-address-validation');
-const bitcoin = require('bitcoinjs-lib');
 
 
 exports.printQR = function (address) {
   return qrcode.generate(address, {small: true})
-}
+};
 
 exports.printLogo = function () {
   console.log(
@@ -23,49 +22,43 @@ exports.printLogo = function () {
       figlet.textSync(require('./package.json').name)
     )
   )
-}
+};
 
 exports.printVersion = function () {
   console.log('v' + require('./package.json').version)
-}
+};
 
 exports.printText = function (text, color) {
   if(color === 'green') console.log(chalk.green(text));
   if(color === 'red') console.log(chalk.red(text));
   if(color === 'yellow') console.log(chalk.yellow(text));
   if(!color) console.log(text);
-}
+};
 
 exports.clear = function () {
   clear();
-}
+};
 
 exports.satoshiToBtc = function (amount) {
   return (amount / 100000000).toFixed(8);
-}
-
-exports.msatToSat = function (msat) {
-  return (amount / 1000);
-}
+};
 
 exports.showMenu = async function (interface) {
 	const answer = await inquirer.prompt(interface.questions);
 	interface.callback(answer);
   return answer;
-}
-
-
+};
 
 exports.showTxsHistory = async function () {
   let addressList = wallet.getAddresses();
-	this.printText("\n--- transaction history ---\n")
-	let txs = []
+	this.printText("\n--- transaction history ---\n");
+	let txs = [];
 	for (let i in addressList){
 		if(addressList[i].chain_stats || addressList[i].mempool_stats) {
 			let address = addressList[i].address;
 			let txs = await explorer.getAddressTxs(address);
 			for (let k in txs) {
-				this.printText("txid: " + txs[k].txid, "green")
+				this.printText("txid: " + txs[k].txid, "green");
 				if(txs[k].status.confirmed) {
 					this.printText("confirmed: " + txs[k].status.confirmed, "green");
 				} else {
@@ -90,7 +83,7 @@ exports.showTxsHistory = async function () {
 
 	}
 	this.showMenu(menu_txs_history);
-}
+};
 
 exports.askTransactionDetails = async function () {
 
@@ -119,17 +112,12 @@ exports.askTransactionDetails = async function () {
   }
 
   let tx = await wallet.prepareTx(addressList, data.address, data.amount, feeRates[data.priority]);
-  console.log('utils:askTransactionDetails')
-  console.log(tx.toHex());
-}
+  console.log(tx.extractTransaction());
+};
 
 exports.validateAddress = function (address) {
-	if (validate(address)[config.network]) {
-		return true
-	} else {
-		return false
-	}
-}
+	return !!validate(address)[config.network];
+};
 
 exports.refresh = async function (refreshData) {
   if(refreshData) await wallet.refresh();
@@ -149,7 +137,7 @@ exports.refresh = async function (refreshData) {
 
 	// deposit address
 	this.printText("deposit address: " + depositAddress);
-	this.printQR(depositAddress)
+	this.printQR(depositAddress);
 
 	this.showMenu(menu_main);
-}
+};

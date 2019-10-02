@@ -18,12 +18,10 @@ function callback (result) {
   console.log(result.menu_txs_history)
   switch (result.menu_txs_history) {
     case choices[0]:
-      console.log('refresh')
       utils.clear();
       utils.showTxsHistory();
       break;
     case choices[1]:
-      console.log('go back')
       utils.clear();
       utils.refresh();
       break;
@@ -34,4 +32,4 @@ module.exports = {
   questions,
   choices,
   callback
-}
+};

@@ -32,7 +32,6 @@ function callback (result) {
       break;
     case choices[3]:
       utils.clear();
-      return;
       break;
     }
 }
@@ -42,4 +41,4 @@ module.exports = {
   questions,
   choices,
   callback
-}
+};

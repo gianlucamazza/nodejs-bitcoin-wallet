@@ -4,7 +4,7 @@ let tx = {};
 
 const level = [
   'high, 2 blocks', 'medium, 6 blocks', 'low, 1008 blocks', 'custom'
-]
+];
 
 questions.push({
   type: 'input',
@@ -54,4 +54,4 @@ module.exports = {
   questions,
   level,
   callback
-}
+};
