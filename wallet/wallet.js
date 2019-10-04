@@ -31,7 +31,7 @@ function updateConfig (mnemonic) {
 	let fileName = 'config.json';
 	let config = require('./../config.json');
 	config.mnemonic = mnemonic;
-		fs.writeFileSync(fileName, JSON.stringify(config), 'utf8', (err) => {
+		fs.writeFileSync(fileName, JSON.stringify(config, null, 2), 'utf8', (err) => {
 			if (err) {
 				console.log(err);
 				return false;
@@ -151,17 +151,17 @@ exports.getCurrentChangeAddress = async function () {
 exports.getBalance = function () {
 	let confirmed = 0;
 	let unconfirmed = 0;
-	for (i in myaddresses) {
-		let chain_stats = myaddresses[i].chain_stats;
-		let mempool_stats = myaddresses[i].mempool_stats;
+	myaddresses.forEach(function (e) {
+		let chain_stats = e.chain_stats;
+		let mempool_stats = e.mempool_stats;
 
-		if(chain_stats && mempool_stats) {
+		if (chain_stats && mempool_stats) {
 			let confirmed_unspent = chain_stats.funded_txo_sum - chain_stats.spent_txo_sum;
 			let unconfirmed_unspent = mempool_stats.funded_txo_sum - mempool_stats.spent_txo_sum;
 			confirmed = confirmed + confirmed_unspent;
 			unconfirmed = unconfirmed + unconfirmed_unspent;
 		}
-	}
+	});
 	for (i in mychangeaddresses) {
 		let chain_stats = mychangeaddresses[i].chain_stats;
 		let mempool_stats = mychangeaddresses[i].mempool_stats;
