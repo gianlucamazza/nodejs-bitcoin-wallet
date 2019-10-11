@@ -3,13 +3,16 @@ const chalk = require("chalk");
 const figlet = require("figlet");
 const clear = require('clear');
 const inquirer = require("inquirer");
+const validate = require('bitcoin-address-validation');
+
 const explorer = require('./explorer/explorer');
 const wallet = require('./wallet/wallet');
 const config = require('./config');
+const conversion = require('./wallet/conversion_utils');
 const menu_main = require('./interfaces/main');
 const menu_txs_history = require('./interfaces/txs_history');
 const menu_send_0 = require('./interfaces/send_tx_0');
-const validate = require('bitcoin-address-validation');
+
 
 
 exports.printQR = function (address) {
@@ -39,10 +42,6 @@ exports.clear = function () {
   clear();
 };
 
-exports.satoshiToBtc = function (amount) {
-  return (amount / 100000000).toFixed(8);
-};
-
 exports.showMenu = async function (interface) {
 	const answer = await inquirer.prompt(interface.questions);
 	interface.callback(answer);
@@ -66,14 +65,14 @@ exports.showTxsHistory = async function () {
 				}
 				for (let n in txs[k].vin) {
 					if(txs[k].vin[n].scriptpubkey_address === address) {
-						let amount = this.satoshiToBtc(txs[k].vin[n].value);
+						let amount = conversion.satoshiToBtc(txs[k].vin[n].value);
 						this.printText('amount: ' + amount);
 						this.printText('type: sent\n', "green");
 					}
 				}
 				for (let n in txs[k].vout) {
 					if(txs[k].vout[n].scriptpubkey_address === address) {
-						let amount = this.satoshiToBtc(txs[k].vout[n].value);
+						let amount = conversion.satoshiToBtc(txs[k].vout[n].value);
 						this.printText('amount: ' + amount);
 						this.printText('type: received\n', "green");
 					}
@@ -92,8 +91,8 @@ exports.askTransactionDetails = async function () {
 
   // wallet info
   this.printText("\n--- prepare transaction ---\n");
-	this.printText("confirmed balance: " + this.satoshiToBtc(balance.confirmed),"green");
-	this.printText("unconfirmed balance: " + this.satoshiToBtc(balance.unconfirmed),"yellow");
+	this.printText("confirmed balance: " + conversion.satoshiToBtc(balance.confirmed),"green");
+	this.printText("unconfirmed balance: " + conversion.satoshiToBtc(balance.unconfirmed),"yellow");
   this.printText("\n");
 
   let feeRates = await explorer.getEstimatedFees();
@@ -112,7 +111,7 @@ exports.askTransactionDetails = async function () {
   }
 
   let tx = await wallet.prepareTx(addressList, data.address, data.amount, feeRates[data.priority]);
-  console.log(tx.extractTransaction());
+  // console.log(tx.extractTransaction());
 };
 
 exports.validateAddress = function (address) {
@@ -132,8 +131,8 @@ exports.refresh = async function (refreshData) {
 	this.printText("last block hash: " + blockhash);
 
 	// wallet info
-	this.printText("confirmed balance: " + this.satoshiToBtc(balance.confirmed),"green");
-	this.printText("unconfirmed balance: " + this.satoshiToBtc(balance.unconfirmed),"yellow");
+	this.printText("confirmed balance: " + conversion.satoshiToBtc(balance.confirmed),"green");
+	this.printText("unconfirmed balance: " + conversion.satoshiToBtc(balance.unconfirmed),"yellow");
 
 	// deposit address
 	this.printText("deposit address: " + depositAddress);

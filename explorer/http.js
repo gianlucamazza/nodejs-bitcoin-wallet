@@ -17,6 +17,6 @@ exports.get = async function(req) {
 		let response = await axios.get(getEndpoint() + req);
 		return response.data;
   	} catch (error) {
-    		console.error(error)
+    		console.error("error contacting endpoint: " + getEndpoint() + req);
   	}
 }

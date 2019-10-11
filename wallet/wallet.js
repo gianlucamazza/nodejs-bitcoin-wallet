@@ -2,9 +2,12 @@ const bip39 = require('bip39');
 const bip32 = require('bip32');
 const bitcoin = require('bitcoinjs-lib');
 const coinselect = require('coinselect');
+const fs = require('fs');
+
 const explorer = require('./../explorer/explorer');
 const network = require('./../config.json').network;
-const fs = require('fs');
+const conversion = require('./conversion_utils');
+
 
 let getNetwork = function () {
 	if (network === 'mainnet') {
@@ -216,7 +219,7 @@ exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) 
 
 	let targets = [{
 		"address": destination,
-		"value": parseFloat(satoshi) * 100000000
+		"value": conversion.BtcToSatoshi(satoshi)
 	}];
 	let { inputs, outputs, fee } = coinselect(utxo, targets, feeRate);
 
@@ -235,7 +238,6 @@ exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) 
 		}
 	));
 
-
 	for(let i = 0; i < outputs.length; i++) {
 		if (!outputs[i].address) {
     	outputs[i].address = await this.getCurrentChangeAddress()
@@ -247,7 +249,6 @@ exports.prepareTx = async function (myaddresses, destination, satoshi, feeRate) 
 			"value": outputs[i].value
 		})
 	}
-
 
 	return psbt;
 };
