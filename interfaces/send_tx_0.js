@@ -26,8 +26,8 @@ questions.push({
 
 function callback (result) {
   // mock
-  result.address = 'tb1qauephxqjhs6vu4gahvg69zp7w4zpxfc7gklw2r';
-  result.amount = '0.01';
+  // result.address = 'tb1qauephxqjhs6vu4gahvg69zp7w4zpxfc7gklw2r';
+  // result.amount = '0.01';
   if(result.priority === level[0]){
     result.priority = 2;
   }
